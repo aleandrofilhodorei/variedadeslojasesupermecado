@@ -2,200 +2,72 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<title>Painel de Lojas</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel Profissional</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 body { font-family: Arial; background:#f0f2f5; padding:20px; }
-h1,h2,h3 { margin:10px 0; }
 .container { background:white; padding:15px; border-radius:10px; margin-bottom:20px; }
-input, select, button { padding:5px; margin:5px 0; border-radius:5px; }
-button { border:none; background:#007BFF; color:white; cursor:pointer; }
-button:hover { background:#0056b3; }
-.product-image { width:80px; height:80px; object-fit:cover; margin-right:10px; }
-.flex { display:flex; align-items:center; }
+input, button { padding:8px; margin:5px 0; width:100%; }
+button { background:#007BFF; color:white; border:none; border-radius:6px; }
 </style>
 </head>
 <body>
-<h1>Painel Profissional de Lojas</h1>
 
-<h2>➕ Adicionar Loja</h2>
-<input type="text" id="nova-loja-nome" placeholder="Nome da loja">
-<input type="text" id="nova-loja-desc" placeholder="Descrição">
-<button onclick="addLoja()">Adicionar Loja</button>
+<h1>🏪 Painel de Lojas</h1>
 
-<div id="lojas-container"></div>
+<div class="container">
+  <h3>Adicionar Loja</h3>
+  <input id="nome" placeholder="Nome da loja">
+  <input id="descricao" placeholder="Descrição">
+  <button onclick="addLoja()">Salvar Loja</button>
+</div>
 
-<h2>🛒 Carrinho</h2>
-<div id="cart-items"></div>
-<p>Total: R$ <span id="cart-total">0</span></p>
-<button onclick="checkout()">Finalizar Compra</button>
-
-<h2>📦 Pedidos</h2>
-<div id="orders-container"></div>
+<div id="lojas"></div>
 
 <script>
-const supabaseUrl = 'SUA_SUPABASE_URL';
-const supabaseKey = 'SUA_SUPABASE_ANON_KEY';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = "https://ufewucxlmuyrekuimvmw.supabase.co"
+const supabaseKey = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
 
-let currentUser;
-let cart = [];
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+let user = null
 
 async function init() {
-  const { data } = await supabase.auth.getUser();
-  if(!data.user) return alert('Faça login primeiro!');
-  currentUser = data.user;
-  loadLojas();
-  loadOrders();
+  const { data } = await supabase.auth.getUser()
+
+  if (!data.user) {
+    alert("Faça login primeiro")
+    window.location.href = "index.html"
+    return
+  }
+
+  user = data.user
+  carregarLojas()
 }
 
 async function addLoja() {
-  const nome = document.getElementById('nova-loja-nome').value;
-  const desc = document.getElementById('nova-loja-desc').value;
-  const { data, error } = await supabase.from('stores').insert([{ nome_loja:nome, descricao:desc, user_id:currentUser.id }]);
-  if(error) return alert(error.message);
-  document.getElementById('nova-loja-nome').value='';
-  document.getElementById('nova-loja-desc').value='';
-  loadLojas();
+  const nome = document.getElementById("nome").value
+  const descricao = document.getElementById("descricao").value
+
+  const { error } = await supabase.from("stores").insert({
+    nome_loja: nome,
+    descricao: descricao,
+    user_id: user.id
+  })
+
+  if (error) return alert(error.message)
+
+  document.getElementById("nome").value = ""
+  document.getElementById("descricao").value = ""
+  carregarLojas()
 }
 
-async function loadLojas() {
-  const { data: lojas, error } = await supabase.from('stores').select('*').eq('user_id', currentUser.id);
-  if(error) return alert(error.message);
-  const container = document.getElementById('lojas-container');
-  container.innerHTML = '';
-  lojas.forEach(loja => {
-    const div = document.createElement('div');
-    div.className='container';
-    div.innerHTML=`<h3>${loja.nome_loja}</h3>
-                   <p>${loja.descricao || ''}</p>
-                   <h4>Produtos:</h4>
-                   <div id="produtos-${loja.id}"></div>
-                   <input type="text" id="produto-nome-${loja.id}" placeholder="Nome do produto">
-                   <input type="number" id="produto-preco-${loja.id}" placeholder="Preço" step="0.01">
-                   <input type="number" id="produto-estoque-${loja.id}" placeholder="Estoque">
-                   <input type="file" id="produto-imagem-${loja.id}">
-                   <button onclick="addProduto('${loja.id}')">Adicionar Produto</button>`;
-    container.appendChild(div);
-    loadProdutos(loja.id);
-  });
-}
+async function carregarLojas() {
+  const { data, error } = await supabase
+    .from("stores")
+    .select("*")
+    .eq("user_id", user.id)
 
-async function addProduto(storeId) {
-  const nome = document.getElementById(`produto-nome-${storeId}`).value;
-  const preco = parseFloat(document.getElementById(`produto-preco-${storeId}`).value);
-  const estoque = parseInt(document.getElementById(`produto-estoque-${storeId}`).value);
-  const fileInput = document.getElementById(`produto-imagem-${storeId}`);
-  let imagem_url = '';
-
-  if(fileInput.files.length>0){
-    const file = fileInput.files[0];
-    const { data: storageData, error: uploadError } = await supabase.storage
-      .from('products')
-      .upload(`images/${Date.now()}_${file.name}`, file);
-    if(uploadError) return alert(uploadError.message);
-    imagem_url = supabase.storage.from('products').getPublicUrl(storageData.path).data.publicUrl;
-  }
-
-  const { data, error } = await supabase.from('products').insert([{ nome, preco, estoque, store_id:storeId, imagem_url }]);
-  if(error) return alert(error.message);
-  document.getElementById(`produto-nome-${storeId}`).value='';
-  document.getElementById(`produto-preco-${storeId}`).value='';
-  document.getElementById(`produto-estoque-${storeId}`).value='';
-  fileInput.value='';
-  loadProdutos(storeId);
-}
-
-async function loadProdutos(storeId) {
-  const { data: produtos, error } = await supabase.from('products').select('*').eq('store_id', storeId);
-  if(error) return alert(error.message);
-  const container = document.getElementById(`produtos-${storeId}`);
-  container.innerHTML = '';
-  produtos.forEach(p => {
-    const div = document.createElement('div');
-    div.className='flex';
-    div.innerHTML=`${p.imagem_url ? `<img src="${p.imagem_url}" class="product-image">` : ''}
-                   <div>
-                   ${p.nome} - R$${p.preco} - Estoque: ${p.estoque}<br>
-                   <button onclick="addToCart('${p.id}','${p.nome}',${p.preco})">Adicionar ao Carrinho</button>
-                   <button onclick="editProduto('${p.id}','${storeId}')">Editar</button>
-                   <button onclick="deleteProduto('${p.id}','${storeId}')">Deletar</button>
-                   </div>`;
-    container.appendChild(div);
-  });
-}
-
-function addToCart(id,nome,preco){
-  const item = cart.find(i=>i.id===id);
-  if(item) item.qtd++; else cart.push({id,nome,preco,qtd:1});
-  renderCart();
-}
-
-function renderCart(){
-  const container = document.getElementById('cart-items');
-  container.innerHTML='';
-  let total=0;
-  cart.forEach(item=>{
-    const div = document.createElement('div');
-    div.className='cart-item';
-    div.innerHTML=`${item.nome} - R$${item.preco} x ${item.qtd}`;
-    container.appendChild(div);
-    total+=item.preco*item.qtd;
-  });
-  document.getElementById('cart-total').innerText=total.toFixed(2);
-}
-
-async function checkout(){
-  if(cart.length===0) return alert('Carrinho vazio!');
-  const { data: lojas } = await supabase.from('stores').select('*').eq('user_id',currentUser.id).limit(1);
-  const storeId = lojas[0].id;
-
-  let totalCompra = cart.reduce((sum,i)=>sum+i.preco*i.qtd,0);
-
-  const { data: order } = await supabase.from('orders').insert([{ user_id:currentUser.id, store_id:storeId, total:totalCompra }]).select().single();
-
-  for(let item of cart){
-    await supabase.from('order_items').insert([{ order_id:order.id, product_id:item.id, quantidade:item.qtd, preco_unitario:item.preco, subtotal:item.qtd*item.preco }]);
-  }
-
-  alert('Compra finalizada!');
-  cart=[];
-  renderCart();
-  loadOrders();
-}
-
-async function loadOrders(){
-  const { data: orders, error } = await supabase.from('orders').select('*, order_items(*)').eq('user_id', currentUser.id);
-  if(error) return alert(error.message);
-  const container = document.getElementById('orders-container');
-  container.innerHTML='';
-  orders.forEach(o=>{
-    const div = document.createElement('div');
-    div.className='container';
-    div.innerHTML=`<strong>Pedido ID:</strong> ${o.id} | <strong>Status:</strong> ${o.status}<br>
-                   ${o.order_items.map(oi=>`${oi.quantidade}x ${oi.product_id} - R$${oi.subtotal}`).join('<br>')}`;
-    container.appendChild(div);
-  });
-}
-
-async function editProduto(productId, storeId){
-  const novoNome = prompt("Novo nome do produto:");
-  const novoPreco = parseFloat(prompt("Novo preço:"));
-  const novoEstoque = parseInt(prompt("Novo estoque:"));
-  const { error } = await supabase.from('products').update({ nome:novoNome, preco:novoPreco, estoque:novoEstoque }).eq('id',productId);
-  if(error) return alert(error.message);
-  loadProdutos(storeId);
-}
-
-async function deleteProduto(productId, storeId){
-  if(!confirm('Deseja realmente deletar este produto?')) return;
-  const { error } = await supabase.from('products').delete().eq('id',productId);
-  if(error) return alert(error.message);
-  loadProdutos(storeId);
-}
-
-init();
-</script>
-</body>
-</html>
+  if (err
