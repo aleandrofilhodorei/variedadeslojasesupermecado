@@ -5,43 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login / Cadastro</title>
 
-  <!-- SUPABASE CDN CORRETO -->
+  <!-- SUPABASE CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
       font-family: Arial;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      background:#f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f0f2f5;
     }
     .container {
-      background:white;
-      padding:30px;
-      border-radius:12px;
-      width:300px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     input, button {
-      width:100%;
-      padding:10px;
-      margin:8px 0;
-      border-radius:6px;
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
     button {
-      background:#007BFF;
-      color:white;
-      border:none;
-      cursor:pointer;
+      background: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
     }
-    button:hover { background:#0056b3; }
+    button:hover { background: #0056b3; }
     .switch {
-      text-align:center;
-      color:#555;
-      cursor:pointer;
-      margin-top:10px;
+      text-align: center;
+      color: #555;
+      cursor: pointer;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -64,10 +65,10 @@
   </div>
 
   <script>
-    const supabaseUrl = "SUA_SUPABASE_URL"
-    const supabaseKey = "SUA_SUPABASE_ANON_KEY"
+    const supabaseUrl = "https://ufewucxlmuyrekuimvmw.supabase.co"
+    const supabaseKey = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
 
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey)
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
 
     function toggleForm() {
       document.getElementById("login-container").style.display =
@@ -81,7 +82,10 @@
       const email = document.getElementById("signup-email").value
       const password = document.getElementById("signup-password").value
 
-      const { error } = await supabase.auth.signUp({ email, password })
+      const { error } = await supabase.auth.signUp({
+        email,
+        password
+      })
 
       if (error) {
         alert(error.message)
@@ -96,4 +100,20 @@
       const email = document.getElementById("login-email").value
       const password = document.getElementById("login-password").value
 
-      const { error } = await supabase.auth.signInWi
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (error) {
+        alert(error.message)
+        return
+      }
+
+      // REDIRECIONA PARA O PAINEL
+      window.location.href = "painel.html"
+    }
+  </script>
+
+</body>
+</html>
