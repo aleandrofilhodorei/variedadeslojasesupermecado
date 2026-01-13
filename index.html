@@ -48,72 +48,77 @@
 </head>
 <body>
 
-  <div class="container" id="login-container">
-    <h2>🔐 Login</h2>
-    <input type="email" id="login-email" placeholder="Email">
-    <input type="password" id="login-password" placeholder="Senha">
-    <button type="button" onclick="login()">Entrar</button>
-    <div class="switch" onclick="toggleForm()">📝 Cadastro</div>
-  </div>
+<div class="container" id="login-container">
+  <h2>🔐 Login</h2>
+  <input type="email" id="login-email" placeholder="Email">
+  <input type="password" id="login-password" placeholder="Senha">
+  <button type="button" onclick="login()">Entrar</button>
+  <div class="switch" onclick="toggleForm()">📝 Cadastro</div>
+</div>
 
-  <div class="container" id="signup-container" style="display:none;">
-    <h2>📝 Cadastro</h2>
-    <input type="email" id="signup-email" placeholder="Email">
-    <input type="password" id="signup-password" placeholder="Senha">
-    <button type="button" onclick="signup()">Cadastrar</button>
-    <div class="switch" onclick="toggleForm()">🔐 Login</div>
-  </div>
+<div class="container" id="signup-container" style="display:none;">
+  <h2>📝 Cadastro</h2>
+  <input type="email" id="signup-email" placeholder="Email">
+  <input type="password" id="signup-password" placeholder="Senha">
+  <button type="button" onclick="signup()">Cadastrar</button>
+  <div class="switch" onclick="toggleForm()">🔐 Login</div>
+</div>
 
-  <script>
-    const supabaseUrl = "https://ufewucxlmuyrekuimvmw.supabase.co"
-    const supabaseKey = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
+<script>
+  const supabaseUrl = "https://ufewucxlmuyrekuimvmw.supabase.co"
+  const supabaseKey = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
 
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
 
-    function toggleForm() {
-      document.getElementById("login-container").style.display =
-        document.getElementById("login-container").style.display === "none" ? "block" : "none"
+  function toggleForm() {
+    document.getElementById("login-container").style.display =
+      document.getElementById("login-container").style.display === "none" ? "block" : "none"
 
-      document.getElementById("signup-container").style.display =
-        document.getElementById("signup-container").style.display === "none" ? "block" : "none"
+    document.getElementById("signup-container").style.display =
+      document.getElementById("signup-container").style.display === "none" ? "block" : "none"
+  }
+
+  async function signup() {
+    const email = document.getElementById("signup-email").value
+    const password = document.getElementById("signup-password").value
+
+    const { error } = await supabase.auth.signUp({ email, password })
+
+    if (error) {
+      alert("Erro no cadastro: " + error.message)
+      return
     }
 
-    async function signup() {
-      const email = document.getElementById("signup-email").value
-      const password = document.getElementById("signup-password").value
+    alert("Cadastro realizado! Agora faça login.")
+    toggleForm()
+  }
 
-      const { error } = await supabase.auth.signUp({
-        email,
-        password
-      })
+  async function login() {
+    const email = document.getElementById("login-email").value
+    const password = document.getElementById("login-password").value
 
-      if (error) {
-        alert(error.message)
-        return
-      }
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
 
-      alert("Cadastro realizado! Agora faça login.")
-      toggleForm()
+    if (error) {
+      alert("Erro ao entrar: " + error.message)
+      return
     }
 
-    async function login() {
-      const email = document.getElementById("login-email").value
-      const password = document.getElementById("login-password").value
+    // GARANTE QUE A SESSÃO FOI CRIADA
+    const { data: session } = await supabase.auth.getSession()
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-
-      if (error) {
-        alert(error.message)
-        return
-      }
-
-      // REDIRECIONA PARA O PAINEL
-      window.location.href = "painel.html"
+    if (!session.session) {
+      alert("Sessão não criada. Tente novamente.")
+      return
     }
-  </script>
+
+    // REDIRECIONA
+    window.location.href = "painel.html"
+  }
+</script>
 
 </body>
 </html>
