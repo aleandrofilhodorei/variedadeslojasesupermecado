@@ -4,22 +4,54 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login / Cadastro</title>
-  <script src="https://aleandrofilhodorei.github.io/variedadeslojasesupermecado/supabase-js@2"></script>
+
+  <!-- SUPABASE CDN CORRETO -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    body { font-family: Arial; display:flex; justify-content:center; align-items:center; height:100vh; background:#f0f2f5; }
-    .container { background:white; padding:30px; border-radius:12px; width:300px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
-    input, button { width:100%; padding:10px; margin:8px 0; border-radius:6px; }
-    button { background:#007BFF; color:white; border:none; cursor:pointer; }
+    body {
+      font-family: Arial;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      background:#f0f2f5;
+    }
+    .container {
+      background:white;
+      padding:30px;
+      border-radius:12px;
+      width:300px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width:100%;
+      padding:10px;
+      margin:8px 0;
+      border-radius:6px;
+    }
+    button {
+      background:#007BFF;
+      color:white;
+      border:none;
+      cursor:pointer;
+    }
     button:hover { background:#0056b3; }
-    .switch { text-align:center; color:#555; cursor:pointer; margin-top:10px; }
+    .switch {
+      text-align:center;
+      color:#555;
+      cursor:pointer;
+      margin-top:10px;
+    }
   </style>
 </head>
 <body>
+
   <div class="container" id="login-container">
     <h2>🔐 Login</h2>
     <input type="email" id="login-email" placeholder="Email">
     <input type="password" id="login-password" placeholder="Senha">
-    <button onclick="login()">Entrar</button>
+    <button type="button" onclick="login()">Entrar</button>
     <div class="switch" onclick="toggleForm()">📝 Cadastro</div>
   </div>
 
@@ -27,37 +59,41 @@
     <h2>📝 Cadastro</h2>
     <input type="email" id="signup-email" placeholder="Email">
     <input type="password" id="signup-password" placeholder="Senha">
-    <button onclick="signup()">Cadastrar</button>
+    <button type="button" onclick="signup()">Cadastrar</button>
     <div class="switch" onclick="toggleForm()">🔐 Login</div>
   </div>
 
   <script>
-    const supabaseUrl = 'SUA_SUPABASE_URL';
-    const supabaseKey = 'SUA_SUPABASE_ANON_KEY';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const supabaseUrl = "SUA_SUPABASE_URL"
+    const supabaseKey = "SUA_SUPABASE_ANON_KEY"
+
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey)
 
     function toggleForm() {
-      document.getElementById('login-container').style.display = 
-        document.getElementById('login-container').style.display === 'none' ? 'block' : 'none';
-      document.getElementById('signup-container').style.display = 
-        document.getElementById('signup-container').style.display === 'none' ? 'block' : 'none';
+      document.getElementById("login-container").style.display =
+        document.getElementById("login-container").style.display === "none" ? "block" : "none"
+
+      document.getElementById("signup-container").style.display =
+        document.getElementById("signup-container").style.display === "none" ? "block" : "none"
     }
 
     async function signup() {
-      const email = document.getElementById('signup-email').value;
-      const password = document.getElementById('signup-password').value;
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if(error) alert(error.message);
-      else alert('Cadastro feito! Faça login.');
+      const email = document.getElementById("signup-email").value
+      const password = document.getElementById("signup-password").value
+
+      const { error } = await supabase.auth.signUp({ email, password })
+
+      if (error) {
+        alert(error.message)
+        return
+      }
+
+      alert("Cadastro realizado! Agora faça login.")
+      toggleForm()
     }
 
     async function login() {
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if(error) alert(error.message);
-      else window.location.href = 'painel.html';
-    }
-  </script>
-</body>
-</html>
+      const email = document.getElementById("login-email").value
+      const password = document.getElementById("login-password").value
+
+      const { error } = await supabase.auth.signInWi
