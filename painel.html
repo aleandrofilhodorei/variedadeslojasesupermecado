@@ -1,73 +1,148 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Painel de Lojas</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Painel de Lojas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SUPABASE CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<style>
-body { font-family: Arial; background:#f0f2f5; padding:20px; }
-.container { background:white; padding:15px; border-radius:10px; margin-bottom:20px; }
-input, button { padding:8px; margin:5px 0; width:100%; }
-button { background:#007BFF; color:white; border:none; border-radius:6px; }
-</style>
+  <style>
+    body {
+      font-family: Arial;
+      background:#f0f2f5;
+      padding:20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .container {
+      background:white;
+      padding:15px;
+      border-radius:10px;
+      margin-bottom:20px;
+    }
+    input, button {
+      padding:8px;
+      margin:5px 0;
+      width:100%;
+      border-radius:6px;
+      border:1px solid #ccc;
+    }
+    button {
+      background:#007BFF;
+      color:white;
+      border:none;
+      cursor:pointer;
+    }
+    button:hover {
+      background:#0056b3;
+    }
+    .loja {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+  </style>
 </head>
 <body>
 
 <h1>🏪 Painel de Lojas</h1>
 
 <div class="container">
-  <h3>Adicionar Loja</h3>
+  <h3>➕ Adicionar Loja</h3>
   <input id="nome" placeholder="Nome da loja">
   <input id="descricao" placeholder="Descrição">
-  <button onclick="addLoja()">Salvar Loja</button>
+  <button type="button" onclick="addLoja()">Salvar Loja</button>
 </div>
 
 <div id="lojas"></div>
 
 <script>
-const supabaseUrl = "https://ufewucxlmuyrekuimvmw.supabase.co"
-const supabaseKey = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
+document.addEventListener("DOMContentLoaded", async () => {
 
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
-let user = null
+  const supabaseUrl = "https://ufewucxlmuyrekuimvmw.supabase.co"
+  const supabaseKey = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
 
-async function init() {
-  const { data } = await supabase.auth.getUser()
+  const supabase = window.supabase.createClient(
+    supabaseUrl,
+    supabaseKey
+  )
 
-  if (!data.user) {
-    alert("Faça login primeiro")
+  let user = null
+
+  // 🔐 Proteção do painel
+  const { data: authData } = await supabase.auth.getUser()
+
+  if (!authData.user) {
+    alert("Você precisa estar logado")
     window.location.href = "index.html"
     return
   }
 
-  user = data.user
+  user = authData.user
   carregarLojas()
-}
 
-async function addLoja() {
-  const nome = document.getElementById("nome").value
-  const descricao = document.getElementById("descricao").value
+  // ➕ Adicionar loja
+  window.addLoja = async function () {
+    const nome = document.getElementById("nome").value.trim()
+    const descricao = document.getElementById("descricao").value.trim()
 
-  const { error } = await supabase.from("stores").insert({
-    nome_loja: nome,
-    descricao: descricao,
-    user_id: user.id
-  })
+    if (!nome) {
+      alert("Informe o nome da loja")
+      return
+    }
 
-  if (error) return alert(error.message)
+    const { error } = await supabase.from("stores").insert({
+      nome_loja: nome,
+      descricao: descricao,
+      user_id: user.id
+    })
 
-  document.getElementById("nome").value = ""
-  document.getElementById("descricao").value = ""
-  carregarLojas()
-}
+    if (error) {
+      alert("Erro ao salvar loja: " + error.message)
+      return
+    }
 
-async function carregarLojas() {
-  const { data, error } = await supabase
-    .from("stores")
-    .select("*")
-    .eq("user_id", user.id)
+    document.getElementById("nome").value = ""
+    document.getElementById("descricao").value = ""
+    carregarLojas()
+  }
 
-  if (err
+  // 📦 Carregar lojas
+  async function carregarLojas() {
+    const { data, error } = await supabase
+      .from("stores")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      alert("Erro ao carregar lojas: " + error.message)
+      return
+    }
+
+    const container = document.getElementById("lojas")
+    container.innerHTML = ""
+
+    if (data.length === 0) {
+      container.innerHTML = "<p>Nenhuma loja cadastrada.</p>"
+      return
+    }
+
+    data.forEach(loja => {
+      const div = document.createElement("div")
+      div.className = "container loja"
+      div.innerHTML = `
+        <strong>${loja.nome_loja}</strong><br>
+        <small>${loja.descricao || ""}</small>
+      `
+      container.appendChild(div)
+    })
+  }
+
+})
+</script>
+
+</body>
+</html>
