@@ -5,13 +5,12 @@
 <title>Plataforma de Lojas</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Supabase v2 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body{
   margin:0;
-  font-family:Arial, sans-serif;
+  font-family:Arial;
   background:#111;
   color:white;
   display:flex;
@@ -24,28 +23,21 @@ body{
   padding:30px;
   border-radius:10px;
   width:100%;
-  max-width:360px;
-}
-h2{
-  text-align:center;
-  color:#ff9800;
+  max-width:350px;
 }
 input,button{
   width:100%;
   padding:12px;
-  margin-top:12px;
+  margin-top:10px;
   border:none;
   border-radius:6px;
-  font-size:16px;
 }
 button{
   background:#ff9800;
-  color:#000;
   font-weight:bold;
   cursor:pointer;
 }
-#msg{
-  margin-top:15px;
+p{
   text-align:center;
 }
 </style>
@@ -55,35 +47,51 @@ button{
 
 <div class="box">
   <h2>🔐 Login</h2>
-
-  <input id="email" type="email" placeholder="Email">
+  <input id="email" placeholder="Email">
   <input id="senha" type="password" placeholder="Senha">
-
   <button onclick="login()">Entrar</button>
+
+  <hr style="margin:20px 0;opacity:.3">
+
+  <h2>📝 Cadastro</h2>
+  <input id="emailCad" placeholder="Email">
+  <input id="senhaCad" type="password" placeholder="Senha">
+  <button onclick="cadastrar()">Cadastrar</button>
 
   <p id="msg"></p>
 </div>
 
 <script>
-/* CONEXÃO SUPABASE */
-const supabase = supabaseJs.createClient(
-  "https://ufewucxlmuyrekuimvmw.supabase.co",
-  "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
-);
+const SUPABASE_URL = "https://ufewucxlmuyrekuimvmw.supabase.co";
+const SUPABASE_KEY = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ";
 
+const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// LOGIN
 async function login(){
-  msg.innerText = "Entrando...";
-
   const { error } = await supabase.auth.signInWithPassword({
     email: email.value,
     password: senha.value
   });
 
   if(error){
-    msg.innerText = "❌ Email ou senha inválidos";
+    msg.innerText = "❌ Login inválido";
   }else{
-    msg.innerText = "✅ Login realizado";
-    // depois você pode trocar para: painel.html
+    window.location.href = "painel.html";
+  }
+}
+
+// CADASTRO
+async function cadastrar(){
+  const { error } = await supabase.auth.signUp({
+    email: emailCad.value,
+    password: senhaCad.value
+  });
+
+  if(error){
+    msg.innerText = "❌ Erro ao cadastrar";
+  }else{
+    msg.innerText = "✅ Cadastro realizado! Faça login.";
   }
 }
 </script>
