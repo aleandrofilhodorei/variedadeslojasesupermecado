@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Plataforma de Lojas</title>
+<title>Login - Plataforma</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -37,7 +37,8 @@ button{
   font-weight:bold;
   cursor:pointer;
 }
-p{
+#msg{
+  margin-top:15px;
   text-align:center;
 }
 </style>
@@ -47,16 +48,21 @@ p{
 
 <div class="box">
   <h2>🔐 Login</h2>
-  <input id="email" placeholder="Email">
-  <input id="senha" type="password" placeholder="Senha">
+
+  <input 
+    id="email" 
+    type="email"
+    value="aleandrofilhodorei@gmail.com"
+    placeholder="Email"
+  >
+
+  <input 
+    id="senha" 
+    type="password"
+    placeholder="Senha"
+  >
+
   <button onclick="login()">Entrar</button>
-
-  <hr style="margin:20px 0;opacity:.3">
-
-  <h2>📝 Cadastro</h2>
-  <input id="emailCad" placeholder="Email">
-  <input id="senhaCad" type="password" placeholder="Senha">
-  <button onclick="cadastrar()">Cadastrar</button>
 
   <p id="msg"></p>
 </div>
@@ -65,33 +71,24 @@ p{
 const SUPABASE_URL = "https://ufewucxlmuyrekuimvmw.supabase.co";
 const SUPABASE_KEY = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ";
 
-const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = supabaseJs.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
-// LOGIN
 async function login(){
+  msg.innerText = "Entrando...";
+
   const { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: senha.value
+    email: email.value.trim(),
+    password: senha.value.trim()
   });
 
   if(error){
-    msg.innerText = "❌ Login inválido";
+    msg.innerText = "❌ Email ou senha inválidos";
+    console.error(error);
   }else{
     window.location.href = "painel.html";
-  }
-}
-
-// CADASTRO
-async function cadastrar(){
-  const { error } = await supabase.auth.signUp({
-    email: emailCad.value,
-    password: senhaCad.value
-  });
-
-  if(error){
-    msg.innerText = "❌ Erro ao cadastrar";
-  }else{
-    msg.innerText = "✅ Cadastro realizado! Faça login.";
   }
 }
 </script>
