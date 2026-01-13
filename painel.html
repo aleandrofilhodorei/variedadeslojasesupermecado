@@ -1,64 +1,57 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Painel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#111;
-  color:white;
-  padding:30px;
-}
-button{
-  padding:12px;
-  background:#ff9800;
-  border:none;
-  border-radius:6px;
-  font-weight:bold;
-  cursor:pointer;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial; padding:20px; background:#f0f2f5; }
+    h1 { margin-bottom:20px; }
+    .loja { background:white; padding:15px; border-radius:10px; margin-bottom:15px; }
+    button { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background:#007BFF; color:white; cursor:pointer; }
+  </style>
 </head>
-
 <body>
+  <h1>Dashboard de Lojas</h1>
+  <div id="lojas-container"></div>
 
-<h1>📊 Painel do Sistema</h1>
-<p id="usuario"></p>
+  <script>
+    const supabaseUrl = 'SUA_SUPABASE_URL';
+    const supabaseKey = 'SUA_SUPABASE_ANON_KEY';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-<button onclick="logout()">Sair</button>
+    async function loadLojas() {
+      const user = supabase.auth.getUser();
+      const { data: lojas, error } = await supabase
+        .from('stores')
+        .select('*')
+        .eq('user_id', (await user).data.user.id);
 
-<script>
-const SUPABASE_URL = "https://ufewucxlmuyrekuimvmw.supabase.co";
-const SUPABASE_KEY = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ";
+      if(error) return alert(error.message);
 
-const supabase = supabaseJs.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+      const container = document.getElementById('lojas-container');
+      container.innerHTML = '';
+      lojas.forEach(loja => {
+        const div = document.createElement('div');
+        div.className = 'loja';
+        div.innerHTML = `<h3>${loja.nome_loja}</h3>
+                         <p>${loja.descricao || ''}</p>
+                         <button onclick="loadProdutos('${loja.id}')">Ver Produtos</button>`;
+        container.appendChild(div);
+      });
+    }
 
-async function carregar(){
-  const { data } = await supabase.auth.getUser();
+    async function loadProdutos(storeId) {
+      const { data: produtos, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('store_id', storeId);
+      if(error) return alert(error.message);
+      alert(produtos.map(p => `${p.nome} - R$${p.preco}`).join('\n'));
+    }
 
-  if(!data.user){
-    window.location.href = "index.html";
-  }else{
-    usuario.innerText = "Logado como: " + data.user.email;
-  }
-}
-
-async function logout(){
-  await supabase.auth.signOut();
-  window.location.href = "index.html";
-}
-
-carregar();
-</script>
-
+    loadLojas();
+  </script>
 </body>
 </html>
