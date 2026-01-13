@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Painel da Loja</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#111;
+  color:white;
+}
+header{
+  background:#000;
+  padding:20px;
+  text-align:center;
+  border-bottom:3px solid #ff9800;
+}
+header h1{
+  margin:0;
+  color:#ff9800;
+}
+.container{
+  max-width:1000px;
+  margin:30px auto;
+  padding:20px;
+}
+.card{
+  background:#1f1f1f;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+input,button{
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  margin-top:10px;
+}
+input{
+  width:100%;
+}
+button{
+  background:#ff9800;
+  font-weight:bold;
+  cursor:pointer;
+}
+table{
+  width:100%;
+  margin-top:15px;
+  border-collapse:collapse;
+}
+th,td{
+  padding:10px;
+  border-bottom:1px solid #333;
+  text-align:left;
+}
+.logout{
+  background:#ff5252;
+  margin-top:20px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>📊 Painel da Loja</h1>
+</header>
+
+<div class="container">
+
+  <!-- DADOS DO USUÁRIO -->
+  <div class="card">
+    <h2>👤 Usuário</h2>
+    <p id="usuario"></p>
+    <button class="logout" onclick="sair()">Sair</button>
+  </div>
+
+  <!-- CADASTRAR LOJA -->
+  <div class="card">
+    <h2>🏪 Criar Loja</h2>
+    <input id="nomeLoja" placeholder="Nome da loja">
+    <button onclick="criarLoja()">Criar Loja</button>
+    <p id="msgLoja"></p>
+  </div>
+
+  <!-- CADASTRAR PRODUTO -->
+  <div class="card">
+    <h2>📦 Cadastrar Produto</h2>
+    <input id="produtoNome" placeholder="Nome do produto">
+    <input id="produtoPreco" type="number" placeholder="Preço de venda">
+    <input id="produtoCusto" type="number" placeholder="Custo">
+    <input id="produtoEstoque" type="number" placeholder="Estoque">
+    <button onclick="criarProduto()">Salvar Produto</button>
+    <p id="msgProduto"></p>
+  </div>
+
+  <!-- LISTA PRODUTOS -->
+  <div class="card">
+    <h2>📋 Produtos</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Preço</th>
+          <th>Estoque</th>
+        </tr>
+      </thead>
+      <tbody id="listaProdutos"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+/* SUPABASE */
+const supabase = supabaseJs.createClient(
+  "https://ufewucxlmuyrekuimvmw.supabase.co",
+  "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
+);
+
+let usuarioAtual = null;
+let lojaAtual = null;
+
+/* VERIFICAR LOGIN */
+async function verificarLogin(){
+  const { data } = await supabase.auth.getUser();
+  if(!data.user){
+    window.location.href = "index.html";
+    return;
+  }
+  usuarioAtual = data.user;
+  usuario.innerText = data.user.email;
+  buscarLoja();
+}
+verificarLogin();
+
+/* SAIR */
+async function sair(){
+  await supabase.auth.signOut();
+  window.location.href = "index.html";
+}
+
+/* CRIAR LOJA */
+async function criarLoja(){
+  const nome = nomeLoja.value;
+  if(!nome) return;
+
+  const { error } = await supabase.from("lojas").insert({
+    nome: nome
+  });
+
+  if(error){
+    msgLoja.innerText = "Erro ao criar loja";
+  }else{
+    msgLoja.innerText = "✅ Loja criada";
+    buscarLoja();
+  }
+}
+
+/* BUSCAR LOJA */
+async function buscarLoja(){
+  const { data } = await supabase.from("lojas").select("*").limit(1);
+  if(data && data.length){
+    lojaAtual = data[0];
+    carregarProdutos();
+  }
+}
+
+/* CRIAR PRODUTO */
+async function criarProduto(){
+  if(!lojaAtual){
+    msgProduto.innerText = "Crie uma loja primeiro";
+    return;
+  }
+
+  const { error } = await supabase.from("produtos").insert({
+    loja_id: lojaAtual.id,
+    nome: produtoNome.value,
+    preco: produtoPreco.value,
+    custo: produtoCusto.value,
+    estoque: produtoEstoque.value
+  });
+
+  if(error){
+    msgProduto.innerText = "Erro ao salvar produto";
+  }else{
+    msgProduto.innerText = "✅ Produto cadastrado";
+    carregarProdutos();
+  }
+}
+
+/* LISTAR PRODUTOS */
+async function carregarProdutos(){
+  const { data } = await supabase
+    .from("produtos")
+    .select("*")
+    .eq("loja_id", lojaAtual.id);
+
+  listaProdutos.innerHTML = "";
+  data.forEach(p=>{
+    listaProdutos.innerHTML += `
+      <tr>
+        <td>${p.nome}</td>
+        <td>R$ ${p.preco}</td>
+        <td>${p.estoque}</td>
+      </tr>
+    `;
+  });
+}
+</script>
+
+</body>
+</html>
