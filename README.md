@@ -1,2 +1,2 @@
 # variedadeslojasesupermecado
-agilidade e conforto
+agilidade no conforto da sua casa 
