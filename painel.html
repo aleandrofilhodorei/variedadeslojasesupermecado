@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Painel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -12,7 +13,7 @@ body{
   font-family:Arial;
   background:#111;
   color:white;
-  padding:20px;
+  padding:30px;
 }
 button{
   padding:12px;
@@ -27,18 +28,23 @@ button{
 
 <body>
 
-<h1>📊 Painel do Usuário</h1>
+<h1>📊 Painel do Sistema</h1>
 <p id="usuario"></p>
+
 <button onclick="logout()">Sair</button>
 
 <script>
 const SUPABASE_URL = "https://ufewucxlmuyrekuimvmw.supabase.co";
 const SUPABASE_KEY = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ";
 
-const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = supabaseJs.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 async function carregar(){
   const { data } = await supabase.auth.getUser();
+
   if(!data.user){
     window.location.href = "index.html";
   }else{
