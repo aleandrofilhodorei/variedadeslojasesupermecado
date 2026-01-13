@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Plataforma de Lojas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Supabase v2 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#111;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.box{
+  background:#1f1f1f;
+  padding:30px;
+  border-radius:10px;
+  width:100%;
+  max-width:360px;
+}
+h2{
+  text-align:center;
+  color:#ff9800;
+}
+input,button{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border:none;
+  border-radius:6px;
+  font-size:16px;
+}
+button{
+  background:#ff9800;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+}
+#msg{
+  margin-top:15px;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>🔐 Login</h2>
+
+  <input id="email" type="email" placeholder="Email">
+  <input id="senha" type="password" placeholder="Senha">
+
+  <button onclick="login()">Entrar</button>
+
+  <p id="msg"></p>
+</div>
+
+<script>
+/* CONEXÃO SUPABASE */
+const supabase = supabaseJs.createClient(
+  "https://ufewucxlmuyrekuimvmw.supabase.co",
+  "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
+);
+
+async function login(){
+  msg.innerText = "Entrando...";
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.value,
+    password: senha.value
+  });
+
+  if(error){
+    msg.innerText = "❌ Email ou senha inválidos";
+  }else{
+    msg.innerText = "✅ Login realizado";
+    // depois você pode trocar para: painel.html
+  }
+}
+</script>
+
+</body>
+</html>
