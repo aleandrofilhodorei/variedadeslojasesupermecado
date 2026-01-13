@@ -3,30 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel</title>
+  <title>Painel Completo</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: Arial; padding:20px; background:#f0f2f5; }
-    h1 { margin-bottom:20px; }
-    .loja { background:white; padding:15px; border-radius:10px; margin-bottom:15px; }
-    button { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background:#007BFF; color:white; cursor:pointer; }
+    h1,h2 { margin-bottom:10px; }
+    .loja, .produto, .cart-item { background:white; padding:15px; border-radius:10px; margin-bottom:15px; }
+    input, button { padding:5px; margin:5px 0; border-radius:5px; }
+    button { border:none; background:#007BFF; color:white; cursor:pointer; }
+    button:hover { background:#0056b3; }
+    #cart { margin-top:30px; }
   </style>
 </head>
 <body>
   <h1>Dashboard de Lojas</h1>
+
+  <h2>➕ Adicionar Loja</h2>
+  <input type="text" id="nova-loja-nome" placeholder="Nome da loja">
+  <input type="text" id="nova-loja-desc" placeholder="Descrição">
+  <button onclick="addLoja()">Adicionar Loja</button>
+
   <div id="lojas-container"></div>
+
+  <div id="cart">
+    <h2>🛒 Carrinho</h2>
+    <div id="cart-items"></div>
+    <p>Total: R$ <span id="cart-total">0</span></p>
+    <button onclick="checkout()">Finalizar Compra</button>
+  </div>
 
   <script>
     const supabaseUrl = 'SUA_SUPABASE_URL';
     const supabaseKey = 'SUA_SUPABASE_ANON_KEY';
     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+    let currentUser;
+    let cart = [];
+
+    async function init() {
+      const { data } = await supabase.auth.getUser();
+      if(!data.user) return alert('Faça login primeiro!');
+      currentUser = data.user;
+      loadLojas();
+    }
+
+    async function addLoja() {
+      const nome = document.getElementById('nova-loja-nome').value;
+      const desc = document.getElementById('nova-loja-desc').value;
+
+      const { data, error } = await supabase
+        .from('stores')
+        .insert([{ nome_loja: nome, descricao: desc, user_id: currentUser.id }]);
+
+      if(error) return alert(error.message);
+      document.getElementById('nova-loja-nome').value = '';
+      document.getElementById('nova-loja-desc').value = '';
+      loadLojas();
+    }
+
     async function loadLojas() {
-      const user = supabase.auth.getUser();
       const { data: lojas, error } = await supabase
         .from('stores')
         .select('*')
-        .eq('user_id', (await user).data.user.id);
+        .eq('user_id', currentUser.id);
 
       if(error) return alert(error.message);
 
@@ -37,21 +76,33 @@
         div.className = 'loja';
         div.innerHTML = `<h3>${loja.nome_loja}</h3>
                          <p>${loja.descricao || ''}</p>
-                         <button onclick="loadProdutos('${loja.id}')">Ver Produtos</button>`;
+                         <h4>Produtos:</h4>
+                         <div id="produtos-${loja.id}"></div>
+                         <input type="text" id="produto-nome-${loja.id}" placeholder="Nome do produto">
+                         <input type="number" id="produto-preco-${loja.id}" placeholder="Preço" step="0.01">
+                         <input type="number" id="produto-estoque-${loja.id}" placeholder="Estoque">
+                         <button onclick="addProduto('${loja.id}')">Adicionar Produto</button>`;
         container.appendChild(div);
+        loadProdutos(loja.id);
       });
+    }
+
+    async function addProduto(storeId) {
+      const nome = document.getElementById(`produto-nome-${storeId}`).value;
+      const preco = parseFloat(document.getElementById(`produto-preco-${storeId}`).value);
+      const estoque = parseInt(document.getElementById(`produto-estoque-${storeId}`).value);
+
+      const { data, error } = await supabase
+        .from('products')
+        .insert([{ nome, preco, estoque, store_id: storeId }]);
+
+      if(error) return alert(error.message);
+      document.getElementById(`produto-nome-${storeId}`).value = '';
+      document.getElementById(`produto-preco-${storeId}`).value = '';
+      document.getElementById(`produto-estoque-${storeId}`).value = '';
+      loadProdutos(storeId);
     }
 
     async function loadProdutos(storeId) {
       const { data: produtos, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('store_id', storeId);
-      if(error) return alert(error.message);
-      alert(produtos.map(p => `${p.nome} - R$${p.preco}`).join('\n'));
-    }
-
-    loadLojas();
-  </script>
-</body>
-</html>
+        .from('pro
