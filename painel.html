@@ -43,11 +43,16 @@
       border-bottom: 1px solid #ddd;
       padding: 10px 0;
     }
+    .logout {
+      background:#dc3545;
+      margin-bottom:20px;
+    }
   </style>
 </head>
 <body>
 
 <h1>🏪 Painel de Lojas</h1>
+<button class="logout" onclick="logout()">🚪 Sair</button>
 
 <div class="container">
   <h3>➕ Adicionar Loja</h3>
@@ -61,18 +66,18 @@
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
 
-  const supabaseUrl = "https://ufewucxlmuyrekuimvmw.supabase.co"
-  const supabaseKey = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
+  const SUPABASE_URL = "https://ufewucxlmuyrekuimvmw.supabase.co"
+  const SUPABASE_KEY = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
 
-  const supabase = window.supabase.createClient(
-    supabaseUrl,
-    supabaseKey
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
   )
 
   let user = null
 
   // 🔐 Proteção do painel
-  const { data: authData } = await supabase.auth.getUser()
+  const { data: authData } = await supabaseClient.auth.getUser()
 
   if (!authData.user) {
     alert("Você precisa estar logado")
@@ -82,6 +87,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   user = authData.user
   carregarLojas()
+
+  // 🚪 Logout
+  window.logout = async function () {
+    await supabaseClient.auth.signOut()
+    window.location.href = "index.html"
+  }
 
   // ➕ Adicionar loja
   window.addLoja = async function () {
@@ -93,11 +104,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       return
     }
 
-    const { error } = await supabase.from("stores").insert({
-      nome_loja: nome,
-      descricao: descricao,
-      user_id: user.id
-    })
+    const { error } = await supabaseClient
+      .from("stores")
+      .insert({
+        nome_loja: nome,
+        descricao: descricao,
+        user_id: user.id
+      })
 
     if (error) {
       alert("Erro ao salvar loja: " + error.message)
@@ -111,7 +124,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // 📦 Carregar lojas
   async function carregarLojas() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("stores")
       .select("*")
       .eq("user_id", user.id)
