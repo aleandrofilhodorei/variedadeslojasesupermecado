@@ -43,6 +43,7 @@
       color: #555;
       cursor: pointer;
       margin-top: 10px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -65,11 +66,17 @@
 </div>
 
 <script>
-  const supabaseUrl = "https://ufewucxlmuyrekuimvmw.supabase.co"
-  const supabaseKey = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
+  // 🔹 CONFIGURAÇÃO SUPABASE
+  const SUPABASE_URL = "https://ufewucxlmuyrekuimvmw.supabase.co"
+  const SUPABASE_KEY = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
 
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+  // ⚠️ nome diferente para evitar conflito
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  )
 
+  // 🔄 alternar formulários
   function toggleForm() {
     document.getElementById("login-container").style.display =
       document.getElementById("login-container").style.display === "none" ? "block" : "none"
@@ -78,11 +85,15 @@
       document.getElementById("signup-container").style.display === "none" ? "block" : "none"
   }
 
+  // 📝 cadastro
   async function signup() {
     const email = document.getElementById("signup-email").value
     const password = document.getElementById("signup-password").value
 
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { error } = await supabaseClient.auth.signUp({
+      email,
+      password
+    })
 
     if (error) {
       alert("Erro no cadastro: " + error.message)
@@ -93,11 +104,12 @@
     toggleForm()
   }
 
+  // 🔐 login
   async function login() {
     const email = document.getElementById("login-email").value
     const password = document.getElementById("login-password").value
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabaseClient.auth.signInWithPassword({
       email,
       password
     })
@@ -107,15 +119,15 @@
       return
     }
 
-    // GARANTE QUE A SESSÃO FOI CRIADA
-    const { data: session } = await supabase.auth.getSession()
+    // confirma sessão
+    const { data } = await supabaseClient.auth.getSession()
 
-    if (!session.session) {
+    if (!data.session) {
       alert("Sessão não criada. Tente novamente.")
       return
     }
 
-    // REDIRECIONA
+    // redireciona
     window.location.href = "painel.html"
   }
 </script>
