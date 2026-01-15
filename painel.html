@@ -15,7 +15,16 @@
       padding:20px;
     }
     h1 {
-      margin-bottom: 20px;
+      margin-bottom: 10px;
+    }
+    .topo {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:20px;
+    }
+    .sair {
+      background:#dc3545;
     }
     .container {
       background:white;
@@ -40,121 +49,123 @@
       background:#0056b3;
     }
     .loja {
-      border-bottom: 1px solid #ddd;
-      padding: 10px 0;
+      margin-top:10px;
     }
-    .logout {
-      background:#dc3545;
-      margin-bottom:20px;
+    .gerenciar {
+      margin-top:10px;
+      background:#28a745;
     }
   </style>
 </head>
 <body>
 
-<h1>🏪 Painel de Lojas</h1>
-<button class="logout" onclick="logout()">🚪 Sair</button>
+<div class="topo">
+  <h1>🏪 Painel de Lojas</h1>
+  <button class="sair" onclick="sair()">🚪 Sair</button>
+</div>
 
 <div class="container">
   <h3>➕ Adicionar Loja</h3>
   <input id="nome" placeholder="Nome da loja">
   <input id="descricao" placeholder="Descrição">
-  <button type="button" onclick="addLoja()">Salvar Loja</button>
+  <button onclick="addLoja()">Salvar Loja</button>
 </div>
 
 <div id="lojas"></div>
 
 <script>
-document.addEventListener("DOMContentLoaded", async () => {
+const supabase = window.supabase.createClient(
+  "https://ufewucxlmuyrekuimvmw.supabase.co",
+  "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
+)
 
-  const SUPABASE_URL = "https://ufewucxlmuyrekuimvmw.supabase.co"
-  const SUPABASE_KEY = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
+let user = null
 
-  const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  )
+// 🔐 PROTEÇÃO DO PAINEL
+async function verificarLogin() {
+  const { data } = await supabase.auth.getUser()
 
-  let user = null
-
-  // 🔐 Proteção do painel
-  const { data: authData } = await supabaseClient.auth.getUser()
-
-  if (!authData.user) {
-    alert("Você precisa estar logado")
+  if (!data.user) {
     window.location.href = "index.html"
     return
   }
 
-  user = authData.user
+  user = data.user
   carregarLojas()
+}
 
-  // 🚪 Logout
-  window.logout = async function () {
-    await supabaseClient.auth.signOut()
-    window.location.href = "index.html"
+verificarLogin()
+
+// 🚪 SAIR
+async function sair() {
+  await supabase.auth.signOut()
+  window.location.href = "index.html"
+}
+
+// ➕ ADICIONAR LOJA
+async function addLoja() {
+  const nome = document.getElementById("nome").value.trim()
+  const descricao = document.getElementById("descricao").value.trim()
+
+  if (!nome) {
+    alert("Informe o nome da loja")
+    return
   }
 
-  // ➕ Adicionar loja
-  window.addLoja = async function () {
-    const nome = document.getElementById("nome").value.trim()
-    const descricao = document.getElementById("descricao").value.trim()
+  const { error } = await supabase.from("stores").insert({
+    nome_loja: nome,
+    descricao: descricao,
+    user_id: user.id
+  })
 
-    if (!nome) {
-      alert("Informe o nome da loja")
-      return
-    }
-
-    const { error } = await supabaseClient
-      .from("stores")
-      .insert({
-        nome_loja: nome,
-        descricao: descricao,
-        user_id: user.id
-      })
-
-    if (error) {
-      alert("Erro ao salvar loja: " + error.message)
-      return
-    }
-
-    document.getElementById("nome").value = ""
-    document.getElementById("descricao").value = ""
-    carregarLojas()
+  if (error) {
+    alert("Erro ao salvar loja: " + error.message)
+    return
   }
 
-  // 📦 Carregar lojas
-  async function carregarLojas() {
-    const { data, error } = await supabaseClient
-      .from("stores")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
+  document.getElementById("nome").value = ""
+  document.getElementById("descricao").value = ""
+  carregarLojas()
+}
 
-    if (error) {
-      alert("Erro ao carregar lojas: " + error.message)
-      return
-    }
+// 📦 LISTAR LOJAS (ORDEM CERTA)
+async function carregarLojas() {
+  const { data, error } = await supabase
+    .from("stores")
+    .select("*")
+    .order("created_at", { ascending: false })
 
-    const container = document.getElementById("lojas")
-    container.innerHTML = ""
-
-    if (data.length === 0) {
-      container.innerHTML = "<p>Nenhuma loja cadastrada.</p>"
-      return
-    }
-
-    data.forEach(loja => {
-      const div = document.createElement("div")
-      div.className = "container loja"
-      div.innerHTML = `
-        <strong>${loja.nome_loja}</strong><br>
-        <small>${loja.descricao || ""}</small>
-      `
-      container.appendChild(div)
-    })
+  if (error) {
+    alert("Erro ao carregar lojas: " + error.message)
+    return
   }
 
-})
+  const container = document.getElementById("lojas")
+  container.innerHTML = ""
+
+  if (data.length === 0) {
+    container.innerHTML = "<p>Nenhuma loja cadastrada.</p>"
+    return
+  }
+
+  data.forEach(loja => {
+    const div = document.createElement("div")
+    div.className = "container loja"
+    div.innerHTML = `
+      <strong>${loja.nome_loja}</strong><br>
+      <small>${loja.descricao || ""}</small><br>
+      <button class="gerenciar" onclick="gerenciar('${loja.id}')">
+        📦 Gerenciar Produtos
+      </button>
+    `
+    container.appendChild(div)
+  })
+}
+
+// 📦 ABRIR PRODUTOS DA LOJA
+function gerenciar(storeId) {
+  window.location.href = `produtos.html?store_id=${storeId}`
+}
 </script>
 
 </body>
