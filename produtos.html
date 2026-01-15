@@ -1,18 +1,72 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Produtos da Loja</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <title>Produtos da Loja</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background:#f0f2f5;
+      padding:20px;
+    }
+    h2 {
+      margin-bottom:10px;
+    }
+    .topo {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:20px;
+    }
+    .container {
+      background:white;
+      padding:15px;
+      border-radius:10px;
+      margin-bottom:20px;
+    }
+    input, button {
+      width:100%;
+      padding:8px;
+      margin:6px 0;
+      border-radius:6px;
+      border:1px solid #ccc;
+    }
+    button {
+      background:#007BFF;
+      color:white;
+      border:none;
+      cursor:pointer;
+    }
+    button:hover {
+      background:#0056b3;
+    }
+    .voltar {
+      background:#6c757d;
+    }
+    .produto {
+      border-bottom:1px solid #ddd;
+      padding:8px 0;
+    }
+  </style>
 </head>
 <body>
 
-<h2>🧺 Produtos da Loja</h2>
+<div class="topo">
+  <h2>🧺 Produtos da Loja</h2>
+  <button class="voltar" onclick="voltar()">⬅ Voltar</button>
+</div>
 
-<input id="nome" placeholder="Nome do produto">
-<input id="preco" placeholder="Preço">
-<input id="estoque" placeholder="Estoque">
-<button onclick="addProduto()">Salvar Produto</button>
+<div class="container">
+  <h3>➕ Adicionar Produto</h3>
+  <input id="nome" placeholder="Nome do produto">
+  <input id="preco" type="number" step="0.01" placeholder="Preço">
+  <input id="estoque" type="number" placeholder="Estoque">
+  <button onclick="addProduto()">Salvar Produto</button>
+</div>
 
 <div id="lista"></div>
 
@@ -22,51 +76,4 @@ const supabase = window.supabase.createClient(
   "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
 )
 
-const storeId = new URLSearchParams(window.location.search).get("store_id")
-
-if (!storeId) {
-  alert("Loja inválida")
-  location.href = "painel.html"
-}
-
-async function addProduto() {
-  const nome = document.getElementById("nome").value
-  const preco = document.getElementById("preco").value
-  const estoque = document.getElementById("estoque").value
-
-  const { error } = await supabase.from("products").insert({
-    store_id: storeId,
-    nome,
-    preco,
-    estoque
-  })
-
-  if (error) {
-    alert(error.message)
-    return
-  }
-
-  carregar()
-}
-
-async function carregar() {
-  const { data } = await supabase
-    .from("products")
-    .select("*")
-    .eq("store_id", storeId)
-
-  const div = document.getElementById("lista")
-  div.innerHTML = ""
-
-  data.forEach(p => {
-    div.innerHTML += `
-      <p>${p.nome} - R$ ${p.preco}</p>
-    `
-  })
-}
-
-carregar()
-</script>
-
-</body>
-</html>
+const storeId = new URLSearchParams(window.location.search).get
