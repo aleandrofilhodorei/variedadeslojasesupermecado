@@ -21,8 +21,13 @@
       background: white;
       padding: 30px;
       border-radius: 12px;
-      width: 300px;
+      width: 320px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .logo {
+      max-width: 140px;
+      margin-bottom: 15px;
     }
     input, button {
       width: 100%;
@@ -37,19 +42,23 @@
       border: none;
       cursor: pointer;
     }
-    button:hover { background: #0056b3; }
+    button:hover {
+      background: #0056b3;
+    }
     .switch {
       text-align: center;
       color: #555;
       cursor: pointer;
       margin-top: 10px;
-      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
 <div class="container" id="login-container">
+  <!-- LOGO -->
+  <img src="logo.png" alt="Logo" class="logo">
+
   <h2>🔐 Login</h2>
   <input type="email" id="login-email" placeholder="Email">
   <input type="password" id="login-password" placeholder="Senha">
@@ -58,6 +67,9 @@
 </div>
 
 <div class="container" id="signup-container" style="display:none;">
+  <!-- LOGO -->
+  <img src="logo.png" alt="Logo" class="logo">
+
   <h2>📝 Cadastro</h2>
   <input type="email" id="signup-email" placeholder="Email">
   <input type="password" id="signup-password" placeholder="Senha">
@@ -70,7 +82,6 @@
   const SUPABASE_URL = "https://ufewucxlmuyrekuimvmw.supabase.co"
   const SUPABASE_KEY = "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
 
-  // ⚠️ nome diferente para evitar conflito
   const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
@@ -90,10 +101,7 @@
     const email = document.getElementById("signup-email").value
     const password = document.getElementById("signup-password").value
 
-    const { error } = await supabaseClient.auth.signUp({
-      email,
-      password
-    })
+    const { error } = await supabaseClient.auth.signUp({ email, password })
 
     if (error) {
       alert("Erro no cadastro: " + error.message)
