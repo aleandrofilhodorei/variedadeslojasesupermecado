@@ -13,9 +13,6 @@
       background:#f0f2f5;
       padding:20px;
     }
-    h2 {
-      margin-bottom:10px;
-    }
     .topo {
       display:flex;
       justify-content:space-between;
@@ -41,23 +38,18 @@
       border:none;
       cursor:pointer;
     }
-    button:hover {
-      background:#0056b3;
-    }
-    .voltar {
-      background:#6c757d;
-    }
-    .produto {
-      border-bottom:1px solid #ddd;
-      padding:8px 0;
-    }
+    .voltar { background:#6c757d; }
+    .sair { background:#dc3545; }
   </style>
 </head>
 <body>
 
 <div class="topo">
   <h2>🧺 Produtos da Loja</h2>
-  <button class="voltar" onclick="voltar()">⬅ Voltar</button>
+  <div>
+    <button class="voltar" onclick="voltar()">⬅ Voltar</button>
+    <button class="sair" onclick="sair()">🚪 Sair</button>
+  </div>
 </div>
 
 <div class="container">
@@ -76,4 +68,92 @@ const supabase = window.supabase.createClient(
   "sb_publishable_XdL_tfSBfAAfR2tqJxB5rA_CipP1mXJ"
 )
 
-const storeId = new URLSearchParams(window.location.search).get
+const storeId = new URLSearchParams(location.search).get("store_id")
+let user = null
+
+// 🔐 GARANTE SESSÃO ANTES DE QUALQUER AÇÃO
+async function init() {
+  const { data, error } = await supabase.auth.getUser()
+
+  if (error || !data.user || !storeId) {
+    window.location.href = "painel.html"
+    return
+  }
+
+  user = data.user
+  carregar()
+}
+
+init()
+
+// ➕ CADASTRAR PRODUTO
+async function addProduto() {
+  const nome = document.getElementById("nome").value.trim()
+  const preco = document.getElementById("preco").value
+  const estoque = document.getElementById("estoque").value
+
+  if (!nome || !preco) {
+    alert("Informe nome e preço")
+    return
+  }
+
+  const { error } = await supabase.from("products").insert({
+    store_id: storeId,
+    nome,
+    preco,
+    estoque
+  })
+
+  if (error) {
+    alert("Erro ao salvar produto: " + error.message)
+    return
+  }
+
+  document.getElementById("nome").value = ""
+  document.getElementById("preco").value = ""
+  document.getElementById("estoque").value = ""
+
+  carregar()
+}
+
+// 📦 LISTAR PRODUTOS
+async function carregar() {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("store_id", storeId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    alert("Erro ao carregar produtos")
+    return
+  }
+
+  const div = document.getElementById("lista")
+  div.innerHTML = ""
+
+  if (data.length === 0) {
+    div.innerHTML = "<p>Nenhum produto cadastrado.</p>"
+    return
+  }
+
+  data.forEach(p => {
+    div.innerHTML += `
+      <div class="container">
+        <strong>${p.nome}</strong><br>
+        Preço: R$ ${Number(p.preco).toFixed(2)}<br>
+        Estoque: ${p.estoque ?? 0}
+      </div>
+    `
+  })
+}
+
+// ⬅ VOLTAR
+function voltar() {
+  window.location.href = "painel.html"
+}
+
+// 🚪 SAIR (LOGOUT REAL)
+async function sair() {
+  await supabase.auth.signOut()
+  window.location.href = "ind
